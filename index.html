@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Transparent Lung X-Ray Diagnosis</title>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <main class="report-shell">
+      <header class="report-header panel-soft">
+        <div>
+          <div class="breadcrumbs">Imaging Queue &nbsp;›&nbsp; Chest X-ray Analysis</div>
+          <h1>Analysis Report: <span id="report-id">#XR-00000</span></h1>
+        </div>
+        <div class="header-actions">
+          <button type="button" class="ghost-btn">DICOM</button>
+          <button type="button" class="primary-btn">Share Report</button>
+        </div>
+      </header>
+
+      <section class="control-panel">
+        <form id="analyze-form" class="control-grid">
+          <div class="field-group grow-2">
+            <label for="xray">Lung X-ray Image</label>
+            <input id="xray" name="xray" type="file" accept="image/png,image/jpeg,image/webp" required />
+          </div>
+          <div class="field-group">
+            <label for="assistive_mode">Mode</label>
+            <select id="assistive_mode" name="assistive_mode">
+              <option value="plain">Plain</option>
+              <option value="balanced" selected>Balanced</option>
+              <option value="clinical">Clinical</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="age">Age</label>
+            <input id="age" name="age" type="number" min="1" max="120" placeholder="72" />
+          </div>
+          <div class="field-group">
+            <label for="sex">Sex</label>
+            <select id="sex" name="sex">
+              <option value="">Select</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="smoking_history">Smoking History</label>
+            <input id="smoking_history" name="smoking_history" type="text" placeholder="30 Pack-years" />
+          </div>
+          <div class="field-group">
+            <label for="spo2">SpO2</label>
+            <input id="spo2" name="spo2" type="text" placeholder="94%" />
+          </div>
+          <div class="field-group">
+            <label for="scan_date">Scan Date</label>
+            <input id="scan_date" name="scan_date" type="date" />
+          </div>
+          <div class="field-group action-wrap">
+            <label>&nbsp;</label>
+            <button id="analyze-btn" type="submit" class="primary-btn">Analyze X-ray</button>
+          </div>
+        </form>
+        <section id="status" class="status hidden"></section>
+      </section>
+
+      <section id="loading-overlay" class="loading-overlay hidden" aria-live="polite" aria-busy="true">
+        <div class="loading-card">
+          <div class="loading-spinner"></div>
+          <h3>Generating AI Report</h3>
+          <p>The model is analyzing the X-ray and building explainable findings.</p>
+          <div class="loading-steps">
+            <span class="step-dot"></span>
+            <span class="step-dot"></span>
+            <span class="step-dot"></span>
+          </div>
+        </div>
+      </section>
+
+      <section id="results" class="report-body">
+        <div class="patient-strip">
+          <article class="mini-card"><span>Patient Details</span><strong id="patient-details">Awaiting input</strong></article>
+          <article class="mini-card"><span>Smoking History</span><strong id="patient-smoking">Awaiting input</strong></article>
+          <article class="mini-card"><span>Oxygen Saturation</span><strong id="patient-spo2">Awaiting input</strong></article>
+          <article class="mini-card"><span>Scan Date</span><strong id="patient-date">Awaiting input</strong></article>
+        </div>
+
+        <div class="main-grid">
+          <div class="left-col">
+            <article class="panel image-panel">
+              <div class="panel-title-row">
+                <h2>Chest X-ray Analysis View</h2>
+                <label class="switch-wrap">
+                  <span>AI Heatmap Overlay</span>
+                  <input type="checkbox" id="heatmap-toggle" checked />
+                </label>
+              </div>
+              <div class="image-wrap">
+                <div id="image-placeholder" class="image-placeholder">
+                  Upload a lung X-ray and click Analyze to generate report overlays.
+                </div>
+                <img id="xray-preview" alt="Uploaded X-ray preview" />
+                <div id="heatmap-overlay" class="heatmap-overlay"></div>
+              </div>
+              <div class="legend">
+                <span class="dot high"></span> High Probability
+                <span class="dot med"></span> Moderate Probability
+                <span class="dot low"></span> Normal Pattern
+              </div>
+            </article>
+
+            <article class="panel critical-panel">
+              <div class="critical-head">
+                <div>
+                  <p>Critical Finding Detected</p>
+                  <h3 id="primary-title">Awaiting analysis</h3>
+                </div>
+                <div class="score-box">
+                  <strong id="primary-score">--%</strong>
+                  <span>Confidence Score</span>
+                </div>
+              </div>
+              <p id="primary-text" class="critical-text"></p>
+              <div id="primary-tags" class="tag-list">
+                <span class="tag ghost-tag">No finding tags yet</span>
+              </div>
+            </article>
+          </div>
+
+          <div class="right-col">
+            <article class="panel">
+              <h2>AI Decision Drivers</h2>
+              <div id="drivers-list" class="drivers-list">
+                <div class="driver-row">
+                  <div class="driver-head">
+                    <strong>Awaiting model output</strong>
+                    <span>0%</span>
+                  </div>
+                  <div class="driver-track"><span style="width: 0%"></span></div>
+                  <small>Driver metrics appear after analysis.</small>
+                </div>
+              </div>
+              <div class="explain-box">
+                <h3>AI Explanation</h3>
+                <p id="ai-explanation">Upload an image to generate clinical and plain-language explanation.</p>
+              </div>
+            </article>
+
+            <article class="panel">
+              <h2>Secondary Findings</h2>
+              <ul id="secondary-list" class="secondary-list">
+                <li><strong>Awaiting analysis</strong><small>Secondary findings will be listed here.</small></li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <article class="panel summary-panel">
+          <h2>Summary & Next Steps</h2>
+          <div id="meta" class="meta-pill">Exam: Chest X-ray • Urgency: pending • Source: Model</div>
+          <p id="overall" class="overall">No analysis has been executed yet.</p>
+          <h3>Recommended Next Steps</h3>
+          <ul id="next-steps"><li>Upload a valid X-ray image and run analysis.</li></ul>
+          <p id="safety" class="safety">AI output is assistive only and requires physician/radiologist confirmation.</p>
+        </article>
+
+        <section class="panel explainability-block">
+          <div class="block-head">
+            <h2>Disease-Level Explainability</h2>
+            <p>Likelihood, rationale, and finding-by-finding transparency.</p>
+          </div>
+          <div id="prediction-list" class="prediction-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
